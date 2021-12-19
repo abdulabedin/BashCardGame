@@ -1,0 +1,305 @@
+#!/bin/bash
+
+# Fnoormoh, Noormohamed,Feroz 500203723, Section:01
+# m105khan, Khan, Muhammed, 500967621, Section: 01
+# s22rehma, Rehman, Shameer, 500973625, Section: 08
+# a2abedin, Abedin, Abdul, 501023078, Section: 09
+
+inputFile=$1
+
+function testing(){
+if [ -z "$inputFile" ] || [ ! -r "$inputFile" ];
+then
+    echo "input file missing or unreadable">&2
+    exit 1
+else
+var=$(head -6 $inputFile)
+if [[ $(head -1 $inputFile) =~ [^[:digit:]] ]]
+then
+  echo "seed line format error">&2
+  exit 3
+fi
+fi
+if [ ! $(grep -c '' $inputFile) -eq 6 ]
+then
+  echo "input file must have 6 lines">&2
+  exit 2
+elif [[ ${var//[[:space:]]/} =~ [^[:digit:]] ]]
+then 
+ echo "card format error">&2
+ exit 4
+else 
+check_one=00
+check_two=15
+
+if [ ! "$(tr 't' 'n' < $inputFile | sort -u $inputFile | wc -w)" == 26 ]; then
+ echo "card format error">&2
+ exit 4
+fi 
+fileContent=`cat $inputFile`
+readarray -t file_as_array <<<"$fileContent"
+row=${#file_as_array[@]}
+row=`expr $row - 1`
+seed=${file_as_array[0]}
+
+declare -A matrix;
+declare -A mark;
+for i in $(seq 1 $row)
+do
+    temp=(${file_as_array[$i]})
+    col=${#temp[@]}
+    col=`expr $col - 1`;
+
+    for j in $(seq 0 $col)
+    do
+        matrix[`expr $i - 1`,$j]=${temp[$j]}
+        mark[`expr $i - 1`,$j]=0
+    done
+done
+
+for i in {0..4}
+ do
+ for j in {0..4}
+ do
+ if [ $j -eq 2 ] && [ $i -eq 2 ]; then
+    if [ ! ${matrix[$j,$i]} -eq 00 ];then
+    echo "card format error">&2
+    exit 4
+    fi
+elif [ $i -eq 0 ]; then
+  if [ ${matrix[$j,$i]} -lt 01 ] || [ ${matrix[$j,$i]} -gt 15 ] ; then
+   echo "card format error">&2
+   exit 4
+    fi 
+else 
+  if [ ${matrix[$j,$i]} -lt $check_one ] || [ ${matrix[$j,$i]} -gt $check_two ]; then
+     echo "card format error">&2
+     exit 4
+  fi
+fi
+done
+check_one=$(expr $check_two + 1)
+check_two=$(expr $check_one + 14)
+done
+fi
+}
+
+
+function matrixCreator(){
+file="$inputFile"
+fileContent=`cat $file`
+readarray -t fileArray <<<"$fileContent"
+
+row=${#fileArray[@]}
+row=`expr $row - 1`
+seed=${fileArray[0]}
+
+    for i in $(seq 1 $row)
+    do
+        temp=(${fileArray[$i]})
+        col=${#temp[@]}
+        col=`expr $col - 1`;
+
+        for j in $(seq 0 $col)
+        do
+            matrix[`expr $i - 1`,$j]=${temp[$j]}
+            mark[`expr $i - 1`,$j]=0
+        done
+    done
+
+}
+
+
+function initalizer(){
+    while [ $testVal -eq 0 ]
+    do
+        matrixCreator
+        testVal=$((testVal+1))
+        rowCheck=(0 0 0 0 0)
+        colCheck=(0 0 0 0 0)
+    done
+}
+
+
+function linuxPrinter(){
+    Linux=(L I N U X)
+    f2="%2s %1s"
+    for t in ${Linux[@]}
+    do
+        printf "$f2" $t 
+    done
+    echo
+}
+
+
+function markedUpdater(){
+    for i in $(seq 0 5)
+    do
+        for j in $(seq 0 5)
+        do
+            if [ "$calledNumber" == "${matrix[$i,$j]}" ]
+            then
+                mark[$i,$j]=1
+            fi
+        done
+    done
+}
+
+
+function winner(){
+  exit 0
+}
+
+
+function cardPrinter(){
+    for i in $(seq 0 5)
+    do 
+        for j in $(seq 0 5)
+        do
+            echo -n "${matrix[$i,$j]}"
+            if [ "${mark[$i,$j]}" == "1" ];
+                then
+                    (( colCheck[j]++ ))
+                    (( rowCheck[i]++ ))
+                    echo -n "m "
+                else
+                    echo -n "  "
+            fi
+        done
+        echo ""
+    done
+}
+
+
+function rowWinCheck(){
+    for i in $(seq 0 5)
+    do
+        if [ "${colCheck[i]}" == "5" ]
+        then
+            echo WINNER
+            winner
+        fi
+    done
+    echo
+}
+
+
+function colWinCheck(){
+    for i in $(seq 0 5)
+    do
+        if [ "${rowCheck[i]}" == "5" ]
+        then
+        echo WINNER
+        winner
+        fi
+    done
+}
+
+
+function cornerWinCheck(){
+    if [ "${cornerCheck}" == "4" ];
+    then
+        echo WINNER
+        winner
+    fi
+}
+
+
+
+#---------MAIN------------
+testing
+
+inputFile="$1"
+declare -a arr
+testVal=0
+echo "Call List: ${arr[*]}"
+firstChar=1
+RANDOM=$seed
+
+while [ "${val}" !=  "q" ]
+do
+   letter=$[RANDOM % 5]
+ 
+   case ${letter} in
+   0)
+   ranNum=$[RANDOM % 15 + 1]
+   if [ ${ranNum} -lt 10 ]; then
+       finalVal="L0${ranNum}"
+   else
+       finalVal="L${ranNum}"
+   fi
+   ;;
+   1)
+   ranNum=$[RANDOM % 15 + 16]
+   finalVal="I${ranNum}" ;;
+   2)
+   ranNum=$[RANDOM % 15 + 31] 
+   finalVal="N${ranNum}" ;;
+   3)
+   ranNum=$[RANDOM % 15 + 46]
+   finalVal="U${ranNum}" ;;
+   4)
+   ranNum=$[RANDOM % 15 + 61]
+   finalVal="X${ranNum}" ;;
+   *)
+   esac   
+ 
+   if [[ " ${arr[*]} " =~ " ${finalVal} " ]]; then
+           continue
+   fi
+ 
+   if [[ ! " ${arr[*]} " =~ " ${finalVal} " ]]; then
+       clear
+        if [ "$firstChar" -eq 1 ]; then
+            let "firstChar=firstChar+1"
+            echo "Call List: ${arr[*]}"
+            finalVal="N00"
+        else
+            arr+=($finalVal)
+            echo "Call List: ${arr[*]}"
+       fi
+
+calledLetter=${finalVal::1}
+calledNumber=${finalVal:1:4}
+
+if [ "$calledLetter" = "L" ]; then
+    colNum=1
+elif [ "$calledLetter" = "I" ]; then
+    colNum=2
+elif [ "$calledLetter" = "N" ]; then
+    colNum=3
+elif [ "$calledLetter" = "U" ]; then
+    colNum=4
+elif [ "$calledLetter" = "X" ]; then
+    colNum=5
+fi
+
+
+declare -A matrix;
+declare -A mark;
+
+testVal=$((testVal+1))
+testVal=$((testVal-1))
+
+initalizer
+
+linuxPrinter
+
+mark[2,2]=1
+markedUpdater
+
+rowCheck=(0 0 0 0 0)
+colCheck=(0 0 0 0 0)
+cornerCheck=`expr ${mark[0,0]} + ${mark[0,4]} + ${mark[4,0]} + ${mark[4,4]}`
+
+cardPrinter
+colWinCheck
+rowWinCheck
+cornerWinCheck
+
+echo -ne "enter any key to get a call or q to quit: "
+read val
+
+   fi
+done
+exit 0
